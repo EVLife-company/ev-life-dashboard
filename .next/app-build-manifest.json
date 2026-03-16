@@ -50,36 +50,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/notifications/page.js"
-    ],
-    "/servicecentre/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/servicecentre/page.js"
-    ],
-    "/servicecentre/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/servicecentre/layout.js"
-    ],
-    "/servicecentre/bookings/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/servicecentre/bookings/page.js"
-    ],
-    "/servicecentre/pending/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/servicecentre/pending/page.js"
-    ],
-    "/servicecentre/schedule/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/servicecentre/schedule/page.js"
-    ],
-    "/servicecentre/profile/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/servicecentre/profile/page.js"
     ]
   }
 }
