@@ -36,11 +36,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/admin/users/page.js"
     ],
-    "/admin/centres/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/centres/page.js"
-    ],
     "/admin/stations/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -50,6 +45,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/notifications/page.js"
+    ],
+    "/admin/centres/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/centres/page.js"
     ]
   }
 }

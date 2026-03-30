@@ -33,27 +33,27 @@ export default function AdminStations() {
     setToast('Station added'); setAddOpen(false); setForm(blank); load();
   };
 
-  const inp = { width: '100%', background: '#1C1C2E', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#F1F2F6', fontFamily: 'Outfit', outline: 'none', marginBottom: 12 };
-  const Btn = ({ onClick, color, children }: any) => <button onClick={onClick} style={{ background: color + '20', border: '1px solid ' + color + '40', color, padding: '4px 9px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Outfit', marginRight: 4 }}>{children}</button>;
+  const inp = { width: '100%', background: '#fff', border: '1px solid #ddd', borderRadius: 10, padding: '10px 14px', fontSize: 14, color: '#111', fontFamily: 'Inter, sans-serif', outline: 'none', marginBottom: 12 };
+  const Btn = ({ onClick, color, children }: any) => <button onClick={onClick} style={{ background: color + '15', border: '1px solid ' + color + '40', color, padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginRight: 4 }}>{children}</button>;
 
   const cols = [
-    { key: 'name', label: 'Station Name', render: (v: string) => <span style={{ color: '#F1F2F6', fontWeight: 700 }}>{v}</span> },
+    { key: 'name', label: 'Station Name', render: (v: string) => <span style={{ fontWeight: 600, color: '#111' }}>{v}</span> },
     { key: 'location', label: 'Location' },
-    { key: 'type', label: 'Type', render: (v: string) => <span style={{ background: v === 'DC' ? 'rgba(84,160,255,.12)' : 'rgba(0,214,143,.12)', color: v === 'DC' ? '#54A0FF' : '#00D68F', padding: '3px 10px', borderRadius: 100, fontSize: 10, fontWeight: 700 }}>{v}</span> },
+    { key: 'type', label: 'Type', render: (v: string) => <span style={{ background: v==='DC'?'rgba(84,160,255,.12)':'rgba(0,214,143,.12)', color: v==='DC'?'#54A0FF':'#00D68F', padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 700 }}>{v}</span> },
     { key: 'power', label: 'Power' },
     { key: 'sessions', label: 'Sessions' },
     { key: 'status', label: 'Status', render: (v: string) => <StatusPill status={v || 'online'} /> },
-    { key: 'id', label: 'Actions', render: (_: any, r: any) => <div><Btn onClick={() => toggle(r.id, r.status)} color="#FFA502">Toggle</Btn><Btn onClick={() => del(r.id)} color="#FF4757">🗑</Btn></div> },
+    { key: 'id', label: 'Actions', render: (_: any, r: any) => <div><Btn onClick={() => toggle(r.id, r.status)} color="#f39c12">Toggle</Btn><Btn onClick={() => del(r.id)} color="#e74c3c">🗑</Btn></div> },
   ];
 
   return (
-    <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Charging Stations</h1>
+    <div style={{ fontFamily: 'Inter, sans-serif' }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24 }}>Charging Stations</h1>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-        <button onClick={() => { setForm(blank); setAddOpen(true); }} style={{ background: '#00D68F', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 13, fontWeight: 700, color: '#000', fontFamily: 'Outfit', cursor: 'pointer' }}>+ Add Station</button>
+        <button onClick={() => { setForm(blank); setAddOpen(true); }} style={{ background: '#00b894', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>+ Add Station</button>
       </div>
-      <div style={{ background: '#141420', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
-        <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', fontWeight: 700, fontSize: 13 }}>Charging Stations</div>
+      <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #eee', fontWeight: 600, fontSize: 14 }}>Charging Stations</div>
         <DataTable columns={cols} data={stations} emptyMessage="No stations yet" />
       </div>
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add Charging Station">
@@ -71,8 +71,8 @@ export default function AdminStations() {
             <input style={inp} placeholder="Longitude e.g. 101.6869" value={form.lng} onChange={e => setForm(f => ({...f, lng: e.target.value}))} />
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-            <button type="button" onClick={() => setAddOpen(false)} style={{ background: '#1C1C2E', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '10px 20px', color: '#8E8FA8', fontFamily: 'Outfit', cursor: 'pointer' }}>Cancel</button>
-            <button type="submit" style={{ background: '#00D68F', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 700, color: '#000', fontFamily: 'Outfit', cursor: 'pointer' }}>Add Station</button>
+            <button type="button" onClick={() => setAddOpen(false)} style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 10, padding: '10px 20px', cursor: 'pointer' }}>Cancel</button>
+            <button type="submit" style={{ background: '#00b894', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 600, color: '#fff', cursor: 'pointer' }}>Add Station</button>
           </div>
         </form>
       </Modal>
