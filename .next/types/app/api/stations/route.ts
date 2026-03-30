@@ -1,4 +1,4 @@
-// File: C:\Projects\evlife-dashboard\home\claude\evlife-dashboard\app\api\stations\route.ts
+// File: C:\Users\Harith\Desktop\ev-life\ev-life-dashboard\app\api\stations\route.ts
 import * as entry from '../../../../../app/api/stations/route.js'
 import type { NextRequest } from 'next/server.js'
 
