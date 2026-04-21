@@ -1,4 +1,4 @@
-// File: C:\Projects\evlife-dashboard\home\claude\evlife-dashboard\app\admin\layout.tsx
+// File: C:\Users\Harith\Desktop\ev-life\ev-life-dashboard\app\admin\layout.tsx
 import * as entry from '../../../../app/admin/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

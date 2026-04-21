@@ -1,16 +1,9 @@
 {
   "/login/page": "app/login/page.js",
-  "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js",
   "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js",
   "/api/bookings/route": "app/api/bookings/route.js",
   "/api/centres/route": "app/api/centres/route.js",
-  "/api/users/route": "app/api/users/route.js",
-  "/api/stations/route": "app/api/stations/route.js",
-  "/api/notifications/route": "app/api/notifications/route.js",
-  "/admin/page": "app/admin/page.js",
   "/admin/bookings/page": "app/admin/bookings/page.js",
-  "/admin/users/page": "app/admin/users/page.js",
-  "/admin/centres/page": "app/admin/centres/page.js",
-  "/admin/stations/page": "app/admin/stations/page.js",
-  "/admin/notifications/page": "app/admin/notifications/page.js"
+  "/admin/page": "app/admin/page.js"
 }

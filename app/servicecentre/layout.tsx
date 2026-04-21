@@ -10,7 +10,7 @@ export default async function ServiceCentreLayout({ children }: { children: Reac
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Outfit, sans-serif' }}>
       <Sidebar role="servicecentre" userName={user.email.split('@')[0]} centreName={user.centreName} />
-      <main style={{ marginLeft: 220, flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <main style={{ marginLeft: 250, flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: '#141420', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '14px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 7, height: 7, background: '#00D68F', borderRadius: '50%' }}></div>

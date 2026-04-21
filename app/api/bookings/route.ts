@@ -3,47 +3,89 @@ import { getSessionUser, apiResponse, apiError } from '@/lib/auth';
 import { getBookings, createBooking } from '@/lib/firestore';
 
 export async function GET(req: NextRequest) {
-  const user = await getSessionUser();
-  if (!user) return apiError('Unauthorized', 401);
+  let user = null;
+
+  try {
+    user = await getSessionUser();
+  } catch (e) {
+    console.log("Auth error:", e);
+  }
+
+  // ✅ TEMP: allow access even if not logged in (DEV MODE)
+  // if (!user) return apiError('Unauthorized', 401);
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
   const search = searchParams.get('search')?.toLowerCase();
 
-  // Service centres only see their own bookings
-  const centreFilter = user.role === 'servicecentre' ? user.centreName : undefined;
-  let bookings = await getBookings(centreFilter) as any[];
+  try {
+    const centreFilter =
+      user?.role === 'servicecentre' ? user.centreName : undefined;
 
-  if (status) bookings = bookings.filter((b: any) => b.status === status);
-  if (search) bookings = bookings.filter((b: any) =>
-    b.userName?.toLowerCase().includes(search) ||
-    b.service?.toLowerCase().includes(search) ||
-    b.centre?.toLowerCase().includes(search) ||
-    b.userEmail?.toLowerCase().includes(search)
-  );
+    console.log("centreFilter:", centreFilter);
 
-  return apiResponse(bookings);
+    let bookings = (await getBookings(centreFilter)) as any[];
+
+    console.log("bookings from firestore:", bookings);
+
+    if (status) {
+      bookings = bookings.filter(b => b.status === status);
+    }
+
+    if (search) {
+      bookings = bookings.filter(b =>
+        b.userName?.toLowerCase().includes(search) ||
+        b.service?.toLowerCase().includes(search) ||
+        b.centre?.toLowerCase().includes(search) ||
+        b.userEmail?.toLowerCase().includes(search)
+      );
+    }
+
+    return apiResponse(bookings);
+  } catch (err) {
+    console.error("GET BOOKINGS ERROR:", err);
+    return apiError('Failed to fetch bookings', 500);
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getSessionUser();
-  if (!user) return apiError('Unauthorized', 401);
+  let user = null;
 
-  const body = await req.json();
-  const { userName, userEmail, service, centre, date, time, amount } = body;
-  if (!userName || !service || !centre || !date || !time) {
-    return apiError('Missing required fields');
+  try {
+    user = await getSessionUser();
+  } catch (e) {
+    console.log("Auth error:", e);
   }
 
-  const id = await createBooking({
-    userName, userEmail: userEmail || '',
-    userId: `manual_${Date.now()}`,
-    vehicleMake: body.vehicleMake || '—',
-    vehicleModel: body.vehicleModel || '—',
-    service, centre, date, time,
-    amount: Number(amount) || 0,
-    status: 'pending',
-  });
+  // ✅ TEMP: allow create without login
+  // if (!user) return apiError('Unauthorized', 401);
 
-  return apiResponse({ id, success: true }, 201);
+  try {
+    const body = await req.json();
+
+    const { userName, userEmail, service, centre, date, time, amount } = body;
+
+    if (!userName || !service || !centre || !date || !time) {
+      return apiError('Missing required fields');
+    }
+
+    const id = await createBooking({
+      userName,
+      userEmail: userEmail || '',
+      userId: `manual_${Date.now()}`,
+      vehicleMake: body.vehicleMake || '—',
+      vehicleModel: body.vehicleModel || '—',
+      service,
+      centre,
+      date,
+      time,
+      amount: Number(amount) || 0,
+      status: 'pending',
+    });
+
+    return apiResponse({ id, success: true }, 201);
+  } catch (err) {
+    console.error("CREATE BOOKING ERROR:", err);
+    return apiError('Failed to create booking', 500);
+  }
 }

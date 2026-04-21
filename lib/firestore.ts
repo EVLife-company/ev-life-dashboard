@@ -16,10 +16,36 @@ function tsToStr(ts: any): string {
 // ── BOOKINGS ──────────────────────────────────────────
 export async function getBookings(centreFilter?: string) {
   let q = centreFilter
-    ? query(collection(db, 'bookings'), where('centre', '==', centreFilter), orderBy('createdAt', 'desc'))
+    ? query(
+        collection(db, 'bookings'),
+        where('serviceCentreName', '==', centreFilter),
+        orderBy('createdAt', 'desc')
+      )
     : query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
+
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data(), createdAt: tsToStr((d.data() as any).createdAt), updatedAt: tsToStr((d.data() as any).updatedAt) }));
+
+  return snap.docs.map(d => {
+    const data = d.data() as any;
+
+    return {
+      id: d.id,
+
+      userName: data.userName,
+      userEmail: data.userEmail,
+
+      service: data.serviceTypeName,       
+      centre: data.serviceCentreName,      
+      date: data.bookingDate,              
+      time: data.bookingTime,            
+
+      amount: data.amount || 0,
+      status: data.status,
+
+      createdAt: tsToStr(data.createdAt),
+      updatedAt: tsToStr(data.updatedAt),
+    };
+  });
 }
 
 export async function getBookingById(id: string) {

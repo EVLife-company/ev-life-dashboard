@@ -1,4 +1,5 @@
 'use client';
+import Swal from 'sweetalert2';
 import { useEffect, useState, useCallback } from 'react';
 import DataTable from '@/components/ui/DataTable';
 import StatusPill from '@/components/ui/StatusPill';
@@ -21,14 +22,35 @@ export default function AdminBookings() {
   const [form, setForm] = useState({ userName: '', userEmail: '', service: SERVICES[0], centre: '', date: '', time: SLOTS[0], amount: '50' });
 
   const load = useCallback(async () => {
-    setLoading(true);
+  setLoading(true);
+
+  try {
     const params = new URLSearchParams();
     if (statusFilter) params.set('status', statusFilter);
     if (search) params.set('search', search);
-    const r = await fetch('/api/bookings?' + params);
-    setBookings(await r.json());
-    setLoading(false);
-  }, [search, statusFilter]);
+
+    const r = await fetch('/api/bookings?' + params, {
+      credentials: 'include', // ✅ important for auth later
+    });
+
+    if (!r.ok) {
+      const err = await r.text();
+      console.error("API ERROR:", err);
+      setBookings([]);
+      return;
+    }
+
+    const data = await r.json();
+    console.log("BOOKINGS:", data);
+
+    setBookings(data);
+  } catch (err) {
+    console.error("FETCH ERROR:", err);
+    setBookings([]);
+  }
+
+  setLoading(false);
+}, [search, statusFilter]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { fetch('/api/centres').then(r => r.json()).then(setCentres); }, []);
@@ -41,10 +63,31 @@ export default function AdminBookings() {
   };
 
   const deleteB = async (id: string) => {
-    if (!confirm('Delete this booking?')) return;
-    const r = await fetch('/api/bookings/' + id, { method: 'DELETE' });
-    if (r.ok) { showToast('Deleted'); load(); } else showToast('Failed', 'error');
-  };
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: 'This booking will be deleted!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#FF4757',
+    cancelButtonColor: '#8E8FA8',
+    confirmButtonText: 'Yes',
+  });
+
+  if (!result.isConfirmed) return;
+
+  const r = await fetch('/api/bookings/' + id, { method: 'DELETE' });
+
+  if (r.ok) {
+    await Swal.fire({
+      title: 'Deleted!',
+      text: 'Booking has been removed.',
+      icon: 'success',
+    });
+    load();
+  } else {
+    Swal.fire('Error', 'Failed to delete booking', 'error');
+  }
+};
 
   const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
