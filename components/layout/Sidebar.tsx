@@ -87,7 +87,7 @@ export default function Sidebar({ role, userName, centreName, pendingCount }: Si
 
       {/* USER PROFILE BOX */}
       <div style={styles.userBox}>
-        <div style={styles.userName}>{userName}</div>
+        {/* <div style={styles.userName}>{userName}</div> */}
         <div style={styles.userRole}>
           {role === 'admin' ? 'System Admin' : centreName || 'Service Centre'}
         </div>

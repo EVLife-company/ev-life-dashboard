@@ -12,14 +12,32 @@ export default function SCBookings() {
   const [toast, setToast] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true);
+  setLoading(true);
+  try {
     const params = new URLSearchParams();
     if (statusFilter) params.set('status', statusFilter);
     if (search) params.set('search', search);
+    
     const r = await fetch('/api/bookings?' + params);
-    setBookings(await r.json());
+    const result = await r.json();
+
+    // CHECK THIS LINE: 
+    // If your apiResponse() helper wraps the data, 'result' might look like { data: { bookings: [...] } }
+    // Based on your error, 'result' is the object, so we need result.bookings
+    if (result && Array.isArray(result.bookings)) {
+      setBookings(result.bookings);
+    } else if (result && Array.isArray(result.data?.bookings)) {
+      setBookings(result.data.bookings);
+    } else {
+      console.error("Data received is not in the expected format:", result);
+      setBookings([]);
+    }
+  } catch (error) {
+    setBookings([]);
+  } finally {
     setLoading(false);
-  }, [search, statusFilter]);
+  }
+}, [search, statusFilter]);
 
   useEffect(() => { load(); }, [load]);
 

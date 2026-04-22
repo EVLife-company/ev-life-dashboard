@@ -1,0 +1,10 @@
+{
+  "/login/page": "app/login/page.js",
+  "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js",
+  "/api/bookings/route": "app/api/bookings/route.js",
+  "/servicecentre/page": "app/servicecentre/page.js",
+  "/servicecentre/profile/page": "app/servicecentre/profile/page.js",
+  "/servicecentre/pending/page": "app/servicecentre/pending/page.js",
+  "/servicecentre/bookings/page": "app/servicecentre/bookings/page.js",
+  "/admin/bookings/page": "app/admin/bookings/page.js"
+}

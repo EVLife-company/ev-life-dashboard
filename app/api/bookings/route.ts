@@ -11,37 +11,45 @@ export async function GET(req: NextRequest) {
     console.log("Auth error:", e);
   }
 
-  // ✅ TEMP: allow access even if not logged in (DEV MODE)
-  // if (!user) return apiError('Unauthorized', 401);
-
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
   const search = searchParams.get('search')?.toLowerCase();
 
   try {
-    const centreFilter =
-      user?.role === 'servicecentre' ? user.centreName : undefined;
+    // If the user is a service centre, filter by their centre name
+    // Ensure user.centreName matches the field 'serviceCentreName' in Firestore
+    const centreFilter = user?.role === 'servicecentre' ? user.centreName : undefined;
 
-    console.log("centreFilter:", centreFilter);
+    console.log("centreFilter applied:", centreFilter);
 
-    let bookings = (await getBookings(centreFilter)) as any[];
+    // Fetch from Firestore
+    let rawBookings = (await getBookings(centreFilter)) as any[];
 
-    console.log("bookings from firestore:", bookings);
+    console.log("Raw bookings from Firestore count:", rawBookings.length);
 
+    // 1. Filter by Status
     if (status) {
-      bookings = bookings.filter(b => b.status === status);
+      rawBookings = rawBookings.filter(b => b.status === status);
     }
 
+    // 2. Filter by Search (Matching your actual Firestore keys)
     if (search) {
-      bookings = bookings.filter(b =>
+      rawBookings = rawBookings.filter(b =>
         b.userName?.toLowerCase().includes(search) ||
-        b.service?.toLowerCase().includes(search) ||
-        b.centre?.toLowerCase().includes(search) ||
-        b.userEmail?.toLowerCase().includes(search)
+        b.userEmail?.toLowerCase().includes(search) ||
+        b.serviceTypeName?.toLowerCase().includes(search) || // Corrected key
+        b.bookingRef?.toLowerCase().includes(search) ||      // Added Ref search
+        b.vehiclePlate?.toLowerCase().includes(search)       // Added Plate search
       );
     }
 
-    return apiResponse(bookings);
+    // 3. IMPORTANT: Return the structure the frontend expects
+    // We wrap it in an object { bookings: [...] } to avoid .map() errors
+    return apiResponse({
+      success: true,
+      bookings: rawBookings
+    });
+
   } catch (err) {
     console.error("GET BOOKINGS ERROR:", err);
     return apiError('Failed to fetch bookings', 500);
@@ -49,38 +57,39 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  let user = null;
-
-  try {
-    user = await getSessionUser();
-  } catch (e) {
-    console.log("Auth error:", e);
-  }
-
-  // ✅ TEMP: allow create without login
-  // if (!user) return apiError('Unauthorized', 401);
-
   try {
     const body = await req.json();
 
-    const { userName, userEmail, service, centre, date, time, amount } = body;
+    // Mapping incoming body to your Firestore naming convention
+    const { 
+      userName, 
+      userEmail, 
+      serviceTypeName, 
+      serviceCentreName, 
+      bookingDate, 
+      bookingTime, 
+      amount 
+    } = body;
 
-    if (!userName || !service || !centre || !date || !time) {
-      return apiError('Missing required fields');
+    // Validation
+    if (!userName || !serviceTypeName || !serviceCentreName || !bookingDate || !bookingTime) {
+      return apiError('Missing required fields: name, service, centre, date, or time');
     }
 
     const id = await createBooking({
       userName,
       userEmail: userEmail || '',
-      userId: `manual_${Date.now()}`,
+      userId: body.userId || `manual_${Date.now()}`,
       vehicleMake: body.vehicleMake || '—',
       vehicleModel: body.vehicleModel || '—',
-      service,
-      centre,
-      date,
-      time,
+      vehiclePlate: body.vehiclePlate || '—',
+      serviceTypeName,
+      serviceCentreName,
+      bookingDate,
+      bookingTime,
       amount: Number(amount) || 0,
       status: 'pending',
+      createdAt: new Date().toISOString()
     });
 
     return apiResponse({ id, success: true }, 201);
