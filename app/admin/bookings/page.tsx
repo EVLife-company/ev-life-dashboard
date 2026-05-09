@@ -1,4 +1,5 @@
 'use client';
+import Swal from 'sweetalert2';
 import { useEffect, useState, useCallback } from 'react';
 import DataTable from '@/components/ui/DataTable';
 import StatusPill from '@/components/ui/StatusPill';
@@ -40,64 +41,72 @@ export default function AdminBookings() {
     amount:'50'
   });
 
-  // Load bookings from API with filters
-  const load = useCallback(async ()=>{
-    setLoading(true);
-
+  const load = useCallback(async () => {
+  setLoading(true);
+  try {
     const params = new URLSearchParams();
-    if(statusFilter) params.set('status',statusFilter);
-    if(search) params.set('search',search);
-    if(centreFilter) params.set('centre',centreFilter);
-    if(serviceFilter) params.set('service',serviceFilter);
+    if (statusFilter) params.set('status', statusFilter);
+    if (search) params.set('search', search);
 
-    const r = await fetch('/api/bookings?'+params);
-    const data = await r.json();
-    setBookings(data);
+    const r = await fetch('/api/bookings?' + params);
+    const result = await r.json();
+
+    console.log("FULL API RESULT:", result); // Tengok console untuk confirm structure
+
+    // 💡 FIX: Check result.data ATAU result.bookings ATAU result itu sendiri (array)
+    const actualBookings = result.data || result.bookings || (Array.isArray(result) ? result : []);
+    
+    setBookings(actualBookings);
+  } catch (err) {
+    console.error("FETCH ERROR:", err);
+    setBookings([]);
+  } finally {
     setLoading(false);
-  },[search,statusFilter,centreFilter,serviceFilter]);
-
-  useEffect(()=>{ load(); },[load]);
-
-  // Load centres for dropdown
-  useEffect(()=>{
-    fetch('/api/centres')
-      .then(r=>r.json())
-      .then(setCentres);
-  },[]);
-
-  const showToast=(msg:string,type:'success'|'error'='success')=>{
-    setToast(msg);
-    setToastType(type);
   }
+}, [search, statusFilter]);
 
-  // Update booking status
-  const updateStatus=async(id:string,status:string)=>{
-    const r = await fetch('/api/bookings/'+id,{
-      method:'PATCH',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({status})
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+  fetch('/api/centres')
+    .then(r => r.json())
+    .then(res => setCentres(res.data || []));
+}, []);
+
+  const showToast = (msg: string, type: 'success'|'error' = 'success') => { setToast(msg); setToastType(type); };
+
+  const updateStatus = async (id: string, status: string) => {
+    const r = await fetch('/api/bookings/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    if (r.ok) { showToast('Booking ' + status); load(); } else showToast('Failed', 'error');
+  };
+
+  const deleteB = async (id: string) => {
+  const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: 'This booking will be deleted!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#FF4757',
+    cancelButtonColor: '#8E8FA8',
+    confirmButtonText: 'Yes',
+  });
+
+  if (!result.isConfirmed) return;
+
+  const r = await fetch('/api/bookings/' + id, { method: 'DELETE' });
+
+  if (r.ok) {
+    await Swal.fire({
+      title: 'Deleted!',
+      text: 'Booking has been removed.',
+      icon: 'success',
     });
-
-    if(r.ok){
-      showToast('Booking '+status);
-      load();
-    } else showToast('Failed','error');
+    load();
+  } else {
+    Swal.fire('Error', 'Failed to delete booking', 'error');
   }
+};
 
-  // Delete booking
-  const deleteB=async(id:string)=>{
-    if(!confirm('Delete this booking?')) return;
-
-    const r = await fetch('/api/bookings/'+id,{method:'DELETE'});
-
-    if(r.ok){
-      showToast('Deleted');
-      load();
-    } else showToast('Failed','error');
-  }
-
-  // Add new booking
-  const submitAdd=async(e:React.FormEvent)=>{
+  const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const r = await fetch('/api/bookings',{

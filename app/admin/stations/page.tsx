@@ -1,82 +1,465 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import { useEffect, useMemo, useState } from 'react';
 import DataTable from '@/components/ui/DataTable';
 import StatusPill from '@/components/ui/StatusPill';
-import Modal from '@/components/ui/Modal';
 import Toast from '@/components/ui/Toast';
-
-const blank = { name: '', location: '', type: 'DC', power: '', lat: '', lng: '' };
+import {
+  collection,
+  getDocs
+} from 'firebase/firestore';
 
 export default function AdminStations() {
   const [stations, setStations] = useState<any[]>([]);
-  const [addOpen, setAddOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
-  const [form, setForm] = useState(blank);
 
-  const load = async () => { const r = await fetch('/api/stations'); setStations(await r.json()); };
-  useEffect(() => { load(); }, []);
+  const load = async () => {
+    setLoading(true);
+
+    try {
+      const r = await fetch('/api/stations');
+
+      const result = await r.json();
+
+      setStations(
+        Array.isArray(result)
+          ? result
+          : result.data || []
+      );
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   const toggle = async (id: string, status: string) => {
-    await fetch('/api/stations/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status === 'online' ? 'offline' : 'online' }) });
-    setToast('Station updated'); load();
+    try {
+      await fetch('/api/stations/' + id, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: status === 'online' ? 'offline' : 'online',
+        }),
+      });
+
+      setToast('Station status updated');
+      load();
+    } catch (err) {
+      console.error(err);
+      setToast('Failed to update station');
+    }
   };
 
   const del = async (id: string) => {
-    if (!confirm('Delete station?')) return;
-    await fetch('/api/stations/' + id, { method: 'DELETE' });
-    setToast('Deleted'); load();
+    if (!confirm('Delete charging station?')) return;
+
+    try {
+      await fetch('/api/stations/' + id, {
+        method: 'DELETE',
+      });
+
+      setToast('Station deleted');
+      load();
+    } catch (err) {
+      console.error(err);
+      setToast('Delete failed');
+    }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await fetch('/api/stations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, lat: parseFloat(form.lat)||0, lng: parseFloat(form.lng)||0 }) });
-    setToast('Station added'); setAddOpen(false); setForm(blank); load();
-  };
+  // =========================
+  // ANALYTICS
+  // =========================
 
-  const inp = { width: '100%', background: '#fff', border: '1px solid #ddd', borderRadius: 10, padding: '10px 14px', fontSize: 14, color: '#111', fontFamily: 'Inter, sans-serif', outline: 'none', marginBottom: 12 };
-  const Btn = ({ onClick, color, children }: any) => <button onClick={onClick} style={{ background: color + '15', border: '1px solid ' + color + '40', color, padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', marginRight: 4 }}>{children}</button>;
+  const analytics = useMemo(() => {
+    const totalRevenue = stations.reduce(
+      (a, b) => a + Number(b.cost || 0),
+      0
+    );
+
+    const totalEnergy = stations.reduce(
+      (a, b) => a + Number(b.energyKwh || 0),
+      0
+    );
+
+    const onlineStations = stations.filter(
+      (s) => s.status === 'online'
+    ).length;
+
+    const completedSessions = stations.filter(
+      (s) => s.status === 'completed'
+    ).length;
+
+    return {
+      totalRevenue,
+      totalEnergy,
+      onlineStations,
+      completedSessions,
+    };
+  }, [stations]);
+
+  // =========================
+  // TABLE COLUMNS
+  // =========================
 
   const cols = [
-    { key: 'name', label: 'Station Name', render: (v: string) => <span style={{ fontWeight: 600, color: '#111' }}>{v}</span> },
-    { key: 'location', label: 'Location' },
-    { key: 'type', label: 'Type', render: (v: string) => <span style={{ background: v==='DC'?'rgba(84,160,255,.12)':'rgba(0,214,143,.12)', color: v==='DC'?'#54A0FF':'#00D68F', padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 700 }}>{v}</span> },
-    { key: 'power', label: 'Power' },
-    { key: 'sessions', label: 'Sessions' },
-    { key: 'status', label: 'Status', render: (v: string) => <StatusPill status={v || 'online'} /> },
-    { key: 'id', label: 'Actions', render: (_: any, r: any) => <div><Btn onClick={() => toggle(r.id, r.status)} color="#f39c12">Toggle</Btn><Btn onClick={() => del(r.id)} color="#e74c3c">🗑</Btn></div> },
+    {
+      key: 'stationName',
+      label: 'Station',
+      render: (v: string, r: any) => (
+        <div>
+          <div
+            style={{
+              color: '#F1F2F6',
+              fontWeight: 700,
+              fontSize: 13,
+            }}
+          >
+            {v}
+          </div>
+
+          <div
+            style={{
+              color: '#8E8FA8',
+              fontSize: 11,
+              marginTop: 3,
+            }}
+          >
+            {r.stationAddress}
+          </div>
+        </div>
+      ),
+    },
+
+    {
+      key: 'chargerPowerKw',
+      label: 'Power',
+      render: (v: number) => (
+        <span
+          style={{
+            background: 'rgba(84,160,255,.12)',
+            color: '#54A0FF',
+            padding: '4px 10px',
+            borderRadius: 999,
+            fontSize: 11,
+            fontWeight: 700,
+          }}
+        >
+          {v} kW
+        </span>
+      ),
+    },
+
+    {
+      key: 'energyKwh',
+      label: 'Energy',
+      render: (v: number) => (
+        <span style={{ color: '#F1F2F6' }}>
+          {Number(v).toFixed(2)} kWh
+        </span>
+      ),
+    },
+
+    {
+      key: 'cost',
+      label: 'Revenue',
+      render: (v: number) => (
+        <span
+          style={{
+            color: '#00D68F',
+            fontWeight: 700,
+          }}
+        >
+          RM {Number(v).toFixed(2)}
+        </span>
+      ),
+    },
+
+    {
+      key: 'vehicleName',
+      label: 'Vehicle',
+      render: (v: string) => (
+        <span
+          style={{
+            color: '#F1F2F6',
+            fontWeight: 600,
+          }}
+        >
+          {v}
+        </span>
+      ),
+    },
+
+    {
+      key: 'paymentMethod',
+      label: 'Payment',
+      render: (v: string) => (
+        <span
+          style={{
+            color: '#FFA502',
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          {v}
+        </span>
+      ),
+    },
+
+    {
+      key: 'battery',
+      label: 'Battery',
+      render: (_: any, r: any) => (
+        <div
+          style={{
+            color: '#F1F2F6',
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          {r.startBatteryPercent}% →{' '}
+          {Math.round(r.batteryEnd)}%
+        </div>
+      ),
+    },
+
+    {
+      key: 'status',
+      label: 'Status',
+      render: (v: string) => <StatusPill status={v} />,
+    },
+
+    {
+      key: 'id',
+      label: 'Actions',
+      render: (_: any, r: any) => (
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            onClick={() => toggle(r.id, r.status)}
+            style={{
+              background: 'rgba(255,165,2,.12)',
+              border: '1px solid rgba(255,165,2,.25)',
+              color: '#FFA502',
+              padding: '5px 10px',
+              borderRadius: 8,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'Outfit',
+            }}
+          >
+            Toggle
+          </button>
+
+          <button
+            onClick={() => del(r.id)}
+            style={{
+              background: 'rgba(255,71,87,.12)',
+              border: '1px solid rgba(255,71,87,.25)',
+              color: '#FF4757',
+              padding: '5px 10px',
+              borderRadius: 8,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'Outfit',
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
   ];
 
+  const cardStyle: any = {
+    background: '#141420',
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderRadius: 18,
+    padding: 20,
+  };
+
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24 }}>Charging Stations</h1>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-        <button onClick={() => { setForm(blank); setAddOpen(true); }} style={{ background: '#00b894', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>+ Add Station</button>
+    <div>
+      {/* HEADER */}
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 26,
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: 24,
+              fontWeight: 700,
+              color: '#F1F2F6',
+            }}
+          >
+            EV Charging Stations
+          </h1>
+
+          <p
+            style={{
+              color: '#8E8FA8',
+              fontSize: 13,
+              marginTop: 6,
+            }}
+          >
+            Monitor charging activity, revenue and energy usage
+          </p>
+        </div>
       </div>
-      <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: 14, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #eee', fontWeight: 600, fontSize: 14 }}>Charging Stations</div>
-        <DataTable columns={cols} data={stations} emptyMessage="No stations yet" />
+
+      {/* ANALYTICS */}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        <div style={cardStyle}>
+          <div
+            style={{
+              color: '#8E8FA8',
+              fontSize: 12,
+              marginBottom: 8,
+            }}
+          >
+            Total Revenue
+          </div>
+
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: '#00D68F',
+            }}
+          >
+            RM {analytics.totalRevenue.toFixed(2)}
+          </div>
+        </div>
+
+        <div style={cardStyle}>
+          <div
+            style={{
+              color: '#8E8FA8',
+              fontSize: 12,
+              marginBottom: 8,
+            }}
+          >
+            Energy Delivered
+          </div>
+
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: '#54A0FF',
+            }}
+          >
+            {analytics.totalEnergy.toFixed(2)} kWh
+          </div>
+        </div>
+
+        <div style={cardStyle}>
+          <div
+            style={{
+              color: '#8E8FA8',
+              fontSize: 12,
+              marginBottom: 8,
+            }}
+          >
+            Online Stations
+          </div>
+
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: '#F1F2F6',
+            }}
+          >
+            {analytics.onlineStations}
+          </div>
+        </div>
+
+        <div style={cardStyle}>
+          <div
+            style={{
+              color: '#8E8FA8',
+              fontSize: 12,
+              marginBottom: 8,
+            }}
+          >
+            Completed Sessions
+          </div>
+
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: '#FFA502',
+            }}
+          >
+            {analytics.completedSessions}
+          </div>
+        </div>
       </div>
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add Charging Station">
-        <form onSubmit={submit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <input style={inp} placeholder="Station name" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} required />
-            <input style={inp} placeholder="Location/Area" value={form.location} onChange={e => setForm(f => ({...f, location: e.target.value}))} required />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <select style={inp} value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value}))}><option>DC</option><option>AC</option></select>
-            <input style={inp} placeholder="Power e.g. 50 kW" value={form.power} onChange={e => setForm(f => ({...f, power: e.target.value}))} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <input style={inp} placeholder="Latitude e.g. 3.1390" value={form.lat} onChange={e => setForm(f => ({...f, lat: e.target.value}))} />
-            <input style={inp} placeholder="Longitude e.g. 101.6869" value={form.lng} onChange={e => setForm(f => ({...f, lng: e.target.value}))} />
-          </div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-            <button type="button" onClick={() => setAddOpen(false)} style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 10, padding: '10px 20px', cursor: 'pointer' }}>Cancel</button>
-            <button type="submit" style={{ background: '#00b894', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 600, color: '#fff', cursor: 'pointer' }}>Add Station</button>
-          </div>
-        </form>
-      </Modal>
-      {toast && <Toast message={toast} onClose={() => setToast('')} />}
+
+      {/* TABLE */}
+
+      <div
+        style={{
+          background: '#141420',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 18,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            padding: '18px 22px',
+            borderBottom:
+              '1px solid rgba(255,255,255,0.07)',
+            fontWeight: 700,
+            fontSize: 14,
+            color: '#F1F2F6',
+          }}
+        >
+          Charging Sessions
+        </div>
+
+        <DataTable
+          columns={cols}
+          data={stations}
+          // loading={loading}
+          emptyMessage="No charging sessions found"
+        />
+      </div>
+
+      {/* TOAST */}
+
+      {toast && (
+        <Toast
+          message={toast}
+          onClose={() => setToast('')}
+        />
+      )}
     </div>
   );
 }
