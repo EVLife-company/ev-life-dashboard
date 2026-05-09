@@ -78,9 +78,12 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
                 {col.label}
               </th>
             ))}
+
           </tr>
         </thead>
+
         <tbody>
+
           {data.map((row, i) => (
             <tr 
               key={row.id || row.bookingRef || i} 
@@ -106,11 +109,17 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
                     : (row[col.key] !== undefined && row[col.key] !== null ? String(row[col.key]) : '—')
                   }
                 </td>
+
               ))}
+
             </tr>
+
           ))}
+
         </tbody>
+
       </table>
+
     </div>
   );
 }

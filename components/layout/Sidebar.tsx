@@ -30,6 +30,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ role, userName, centreName, pendingCount }: SidebarProps) {
+
   const router = useRouter();
   const path = usePathname();
 
@@ -117,6 +118,7 @@ export default function Sidebar({ role, userName, centreName, pendingCount }: Si
             </Link>
           );
         })}
+
       </nav>
 
       {/* FOOTER */}
@@ -126,6 +128,7 @@ export default function Sidebar({ role, userName, centreName, pendingCount }: Si
           <span>Sign Out</span>
         </button>
       </div>
+
     </aside>
   );
 }
