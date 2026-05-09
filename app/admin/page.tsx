@@ -18,13 +18,25 @@ export default function AdminOverview() {
 
   const cols = [
     { key: 'userName', label: 'Customer', render: (v: string, r: any) => <div><div style={{ color: '#F1F2F6', fontWeight: 700 }}>{v}</div><div style={{ fontSize: 11, color: '#44445A' }}>{r.userEmail}</div></div> },
-    { key: 'service', label: 'Service' },
-    { key: 'centre', label: 'Centre' },
+    {
+      key: 'service',
+      label: 'Service',
+      render: (_: any, r: any) => (
+        <span>{r.service || r.serviceTypeName || '—'}</span>
+      )
+    },
+    {
+      key: 'centre',
+      label: 'Centre',
+      render: (_: any, r: any) => (
+        <span>{r.centre || r.serviceCentreName || '—'}</span>
+      )
+    },
     { key: 'amount', label: 'Amount', render: (v: number) => <span style={{ fontWeight: 700, color: '#F1F2F6' }}>{v ? `RM ${v}` : 'FREE'}</span> },
     { key: 'status', label: 'Status', render: (v: string) => <StatusPill status={v} /> },
-    { key: 'id', label: 'Action', render: (_: any, r: any) => r.status === 'pending' ? (
-      <button onClick={async () => { await fetch(`/api/bookings/${r.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'confirmed' }) }); fetch('/api/dashboard/stats').then(x => x.json()).then(setStats); }} style={{ background: 'rgba(0,214,143,.12)', border: '1px solid rgba(0,214,143,.2)', color: '#00D68F', padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Outfit' }}>Approve</button>
-    ) : <span style={{ color: '#44445A', fontSize: 11 }}>—</span> },
+    // { key: 'id', label: 'Action', render: (_: any, r: any) => r.status === 'pending' ? (
+    //   <button onClick={async () => { await fetch(`/api/bookings/${r.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'confirmed' }) }); fetch('/api/dashboard/stats').then(x => x.json()).then(setStats); }} style={{ background: 'rgba(0,214,143,.12)', border: '1px solid rgba(0,214,143,.2)', color: '#00D68F', padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Outfit' }}>Approve</button>
+    // ) : <span style={{ color: '#44445A', fontSize: 11 }}>—</span> },
   ];
 
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#44445A' }}>Loading...</div>;

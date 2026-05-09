@@ -46,11 +46,10 @@ export default function LoginPage() {
     }
   };
 
-  // 🎨 STYLING (BACK TO DARK MODE)
   const S = {
     page: {
       minHeight: '100vh',
-      background: '#0A0A0F', // Background asal kau
+      background: '#0A0A0F', 
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -58,7 +57,7 @@ export default function LoginPage() {
       fontFamily: 'Outfit, sans-serif'
     },
     card: {
-      background: '#141420', // Warna kad asal
+      background: '#141420', 
       border: '1px solid rgba(255,255,255,0.12)',
       borderRadius: 24,
       width: '100%',
