@@ -45,7 +45,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Create the token with the specific centreId
-    const token = await signToken({ uid, email, role, centreName, centreId });
+    const token = await signToken({
+      id: uid,
+      uid,
+      email,
+      role,
+      centreName,
+      centreId,
+    });
 
     // 6. Return response and set the Cookie
     const res = apiResponse({ success: true, role, centreName, centreId });
