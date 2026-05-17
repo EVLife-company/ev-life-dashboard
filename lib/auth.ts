@@ -9,6 +9,7 @@ export type UserRole = 'admin' | 'servicecentre';
 
 export interface AuthUser {
   uid: string;
+  id: string;
   email: string;
   role: UserRole;
   centreName?: string;
