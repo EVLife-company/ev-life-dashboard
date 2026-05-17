@@ -168,23 +168,28 @@ export async function deleteCentre(id: string) {
 
 // ── STATIONS ──────────────────────────────────────────
 export async function getStations() {
-  const q = query(collection(db, 'stations'), orderBy('createdAt', 'desc'));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ 
-    id: d.id, 
-    ...d.data(), 
-    createdAt: tsToStr((d.data() as any).createdAt) 
-  }));
+  try {
+    // Gunakan nama koleksi yang betul: chargingSessions
+    const stationsRef = collection(db, 'chargingSessions');
+    const q = query(stationsRef, orderBy('startTime', 'desc'));
+    
+    const snap = await getDocs(q);
+    
+    return snap.docs.map(d => ({ 
+      id: d.id, 
+      ...d.data() 
+    }));
+  } catch (error) {
+    console.error("Firestore Error:", error);
+    // Fallback: Jika 'orderBy' gagal (sebab index tak ada), buat fetch biasa
+    const snap = await getDocs(collection(db, 'chargingSessions'));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
 }
 
 export async function createStation(data: any) {
-  const ref = await addDoc(collection(db, 'stations'), { 
-    ...data, 
-    sessions: 0, 
-    status: 'online', 
-    createdAt: serverTimestamp() 
-  });
-  return ref.id;
+  const docRef = await addDoc(collection(db, 'chargingSessions'), data);
+  return docRef.id;
 }
 
 export async function updateStation(id: string, data: any) {
