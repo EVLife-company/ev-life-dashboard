@@ -57,7 +57,14 @@ export default function AdminBookings() {
   useEffect(() => {
     fetch('/api/centres')
       .then(r => r.json())
-      .then(res => setCentres(res.data || []));
+      .then(res => {
+        const actualCentres =
+          res.data ||
+          res.centres ||
+          (Array.isArray(res) ? res : []);
+
+        setCentres(actualCentres);
+      });
   }, []);
 
   // --- FILTER LOGIC ---
@@ -107,17 +114,34 @@ export default function AdminBookings() {
 
   const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const payload = {
+      userName: form.userName,
+      userEmail: form.userEmail,
+      serviceTypeName: form.service,
+      serviceCentreName: form.centre,
+      bookingDate: form.date,
+      bookingTime: form.time,
+      amount: Number(form.amount)
+    };
+
     const r = await fetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: JSON.stringify(payload)
     });
+
+    const data = await r.json();
+
     if (r.ok) {
       showToast('Booking added');
       setAddOpen(false);
       load();
-    } else showToast('Failed', 'error');
-  }
+    } else {
+      console.log(data);
+      showToast(data?.message || 'Failed', 'error');
+    }
+  };
 
   // --- STYLES ---
   const inp = {
