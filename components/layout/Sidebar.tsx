@@ -12,7 +12,8 @@ import {
   Bell, 
   LogOut,
   ClipboardList,
-  Clock
+  Clock,
+  Info
 } from 'lucide-react';
 
 interface NavItem {
@@ -48,8 +49,9 @@ export default function Sidebar({ role, userName, centreName, pendingCount }: Si
     { icon: <LayoutDashboard size={18} />, label: 'Dashboard', href: '/servicecentre' },
     { icon: <ClipboardList size={18} />, label: 'All Bookings', href: '/servicecentre/bookings' },
     { icon: <Clock size={18} />, label: 'Pending', href: '/servicecentre/pending', badge: pendingCount },
-    { icon: <Calendar size={18} />, label: 'Schedule', href: '/servicecentre/schedule' },
+    // { icon: <Calendar size={18} />, label: 'Schedule', href: '/servicecentre/schedule' },
     { icon: <Building2 size={18} />, label: 'Centre Profile', href: '/servicecentre/profile' },
+    { icon: <Info size={18} />, label: 'Help', href: '/servicecentre/help' },
   ];
 
   const nav = role === 'admin' ? adminNav : centreNav;
@@ -60,7 +62,7 @@ export default function Sidebar({ role, userName, centreName, pendingCount }: Si
       text: 'You will be logged out of your session',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#10B981', // Hijau menyesuaikan tema EV
+      confirmButtonColor: '#10B981', 
       cancelButtonColor: '#6B7280',
       confirmButtonText: 'Yes, sign out',
     });

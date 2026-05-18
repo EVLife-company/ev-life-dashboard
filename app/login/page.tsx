@@ -23,25 +23,34 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (!res.ok) { 
-        setError(data.error || 'Login failed'); 
-        return; 
+      if (!res.ok) {
+        setError(data.error || 'Login failed');
+        return;
       }
 
-      // REDIRECTION LOGIC
-      // Based on the role returned from your API (which fetches from Firestore users collection)
-      if (data.role === 'admin') {
-        router.push('/admin');
-      } else if (data.role === 'servicecentre' || data.role === 'service_centre') {
-        router.push('/servicecentre');
-      } else {
+      // wait a bit for cookie to be set properly
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // safer redirect logic
+      const role = data.role;
+
+      if (role === 'admin') {
+        router.replace('/admin');
+      } 
+      else if (role === 'service_centre') {
+        router.replace('/servicecentre');
+      } 
+      else {
         setError('Unauthorized role. Please contact support.');
+        return;
       }
 
-      router.refresh();
-    } catch (err) {
+      // no router.refresh needed here
+    } 
+    catch (err) {
       setError('Network error. Please check your connection.');
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };
@@ -179,8 +188,8 @@ export default function LoginPage() {
           {/* DEMO BOX */}
           <div style={{ marginTop: 35, padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 12, fontSize: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ color: '#00D68F', fontWeight: 700, marginBottom: 5 }}>Demo Access</div>
-            <div style={{ color: '#8E8FA8' }}>Admin: admin@evlife.my / Admin@123</div>
-            <div style={{ color: '#8E8FA8' }}>Centre: centre@evlife.my / Centre@123</div>
+            {/* <div style={{ color: '#8E8FA8' }}>Admin: admin@evlife.my / Admin@123</div> */}
+            <div style={{ color: '#8E8FA8' }}>Centre: klcc@sc.evlife.my / klcc123</div>
           </div>
         </div>
 

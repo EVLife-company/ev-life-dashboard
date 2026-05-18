@@ -5,7 +5,7 @@ const SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'evlife-super-secret-jwt-key-2026'
 );
 
-export type UserRole = 'admin' | 'servicecentre';
+export type UserRole = 'admin' | 'service_centre';
 
 export interface AuthUser {
   uid: string;
