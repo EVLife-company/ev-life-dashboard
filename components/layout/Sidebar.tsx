@@ -24,7 +24,7 @@ interface NavItem {
 }
 
 interface SidebarProps {
-  role: 'admin' | 'servicecentre';
+  role: 'admin' | 'service_centre';
   userName: string;
   centreName?: string;
   pendingCount?: number;

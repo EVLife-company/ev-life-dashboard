@@ -11,7 +11,7 @@ import {
 export async function GET() {
   const user = await getSessionUser();
   // Allow admins and service centers to see notifications
-  if (!user || (user.role !== 'admin' && user.role !== 'servicecentre')) {
+  if (!user || (user.role !== 'admin' && user.role !== 'service_centre')) {
     return apiError('Forbidden', 403);
   }
   const notifs = await getNotifications();
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const user = await getSessionUser();
   
   // Allow servicecentre role to send "Repair Complete" notifications
-  if (!user || (user.role !== 'admin' && user.role !== 'servicecentre')) {
+  if (!user || (user.role !== 'admin' && user.role !== 'service_centre')) {
     return apiError('Forbidden', 403);
   }
 
