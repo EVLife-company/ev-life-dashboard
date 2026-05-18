@@ -2,23 +2,97 @@ import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import Sidebar from '@/components/layout/Sidebar';
 
-export default async function ServiceCentreLayout({ children }: { children: React.ReactNode }) {
+export default async function ServiceCentreLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const user = await getSessionUser();
+
   if (!user) redirect('/login');
-  if (user.role === 'admin') redirect('/admin');
+  if (user.role !== 'service_centre') redirect('/admin');
+
+  const SIDEBAR_WIDTH = 250;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Outfit, sans-serif' }}>
-      <Sidebar role="servicecentre" userName={user.email.split('@')[0]} centreName={user.centreName} />
-      <main style={{ marginLeft: 250, flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ background: '#141420', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '14px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50 }}>
+    <div
+      style={{
+        display: 'flex',
+        minHeight: '100vh',
+        background: '#0B0B14',
+        fontFamily: 'Outfit, sans-serif',
+      }}
+    >
+      {/* SIDEBAR */}
+      <Sidebar
+        role="servicecentre"
+        userName={user.email.split('@')[0]}
+        centreName={user.centreName}
+      />
+
+      {/* MAIN */}
+      <main
+        style={{
+          marginLeft: SIDEBAR_WIDTH,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          background: '#0B0B14',
+        }}
+      >
+        {/* TOPBAR */}
+        <header
+          style={{
+            background: '#0B0B14',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            padding: '18px 28px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+            backdropFilter: 'blur(10px)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 7, height: 7, background: '#00D68F', borderRadius: '50%' }}></div>
-            <span style={{ fontSize: 11, color: '#00D68F' }}>Live</span>
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                background: '#00D68F',
+                borderRadius: '50%',
+                boxShadow: '0 0 8px #00D68F',
+              }}
+            />
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#00D68F',
+              }}
+            >
+              LIVE
+            </span>
           </div>
-          <span style={{ fontSize: 11, color: '#44445A' }}>{user.centreName || 'Service Centre'}</span>
+
+          <span style={{ fontSize: 12, color: '#44445A' }}>
+            {user.centreName || 'SERVICE CENTRE'}
+          </span>
+        </header>
+
+        {/* CONTENT */}
+        <div
+          style={{
+            flex: 1,
+            padding: 28,
+            background: '#0B0B14',
+            color: '#fff',
+          }}
+        >
+          {children}
         </div>
-        <div style={{ flex: 1, padding: 28 }}>{children}</div>
       </main>
     </div>
   );

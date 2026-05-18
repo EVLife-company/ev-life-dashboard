@@ -1,31 +1,33 @@
 import { NextRequest } from 'next/server';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
-import { adminDb } from '@/lib/firebase-admin'; // Use Admin SDK to read Firestore on server
+import { adminDb } from '@/lib/firebase-admin';
 import { signToken, apiResponse, apiError, UserRole } from '@/lib/auth';
 
 const ADMIN_EMAILS = ['admin@evlife.my'];
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
-  if (!email || !password) return apiError('Email and password required');
+
+  if (!email || !password) {
+    return apiError('Email and password required');
+  }
 
   try {
-    // 1. Authenticate with Firebase Auth
+    // 1. Firebase authentication
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const uid = cred.user.uid;
 
-    // 2. Setup default roles
-    let role: UserRole = 'servicecentre';
+    // 2. Default role
+    let role: UserRole = 'service_centre';
     let centreName: string | undefined;
     let centreId: string | undefined;
 
-    // 3. Admin Check
+    // 3. Admin check
     if (ADMIN_EMAILS.includes(email)) {
       role = 'admin';
     } else {
-      // 4. Fetch the Service Centre details from your 'users' collection
-      // We use the UID as the document ID
+      // 4. Get service centre profile
       const userDoc = await adminDb.collection('users').doc(uid).get();
 
       if (!userDoc.exists) {
@@ -33,18 +35,17 @@ export async function POST(req: NextRequest) {
       }
 
       const userData = userDoc.data();
-      
-      // Ensure the user actually has a service centre role
+
       if (userData?.role !== 'service_centre') {
         return apiError('Unauthorized access role', 403);
       }
 
-      role = 'servicecentre';
+      role = 'service_centre';
       centreId = userData.serviceCentreId;
-      centreName = userData.name;         
+      centreName = userData.name;
     }
 
-    // 5. Create the token with the specific centreId
+    // 5. Create JWT token
     const token = await signToken({
       id: uid,
       uid,
@@ -54,17 +55,37 @@ export async function POST(req: NextRequest) {
       centreId,
     });
 
-    // 6. Return response and set the Cookie
-    const res = apiResponse({ success: true, role, centreName, centreId });
-    res.headers.set('Set-Cookie',
-      `evlife_token=${token}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax; Secure`
-    );
-    
+    // 6. Set cookie safely (Render + localhost compatible)
+    const isProd = process.env.NODE_ENV === 'production';
+
+    const cookie = [
+      `evlife_token=${token}`,
+      'HttpOnly',
+      'Path=/',
+      'Max-Age=86400',
+      'SameSite=Lax',
+      isProd ? 'Secure' : ''
+    ].filter(Boolean).join('; ');
+
+    const res = apiResponse({
+      success: true,
+      role,
+      centreName,
+      centreId,
+    });
+
+    res.headers.set('Set-Cookie', cookie);
+
     return res;
 
   } catch (e: any) {
     console.error('Login Error:', e);
-    const msg = e.code === 'auth/invalid-credential' ? 'Wrong email or password' : 'Login failed';
+
+    const msg =
+      e?.code === 'auth/invalid-credential'
+        ? 'Wrong email or password'
+        : 'Login failed';
+
     return apiError(msg, 401);
   }
 }
