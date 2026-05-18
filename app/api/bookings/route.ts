@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     // If the user is a service centre, filter by their centre name
     // Ensure user.centreName matches the field 'serviceCentreName' in Firestore
-    const centreFilter = user?.role === 'servicecentre' ? user.centreName : undefined;
+    const centreFilter = user?.role === 'service_centre' ? user.centreName : undefined;
 
     console.log("centreFilter applied:", centreFilter);
 
