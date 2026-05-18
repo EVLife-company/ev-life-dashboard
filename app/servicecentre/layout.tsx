@@ -25,7 +25,7 @@ export default async function ServiceCentreLayout({
     >
       {/* SIDEBAR */}
       <Sidebar
-        role="servicecentre"
+        role="service_centre"
         userName={user.email.split('@')[0]}
         centreName={user.centreName}
       />
