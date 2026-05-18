@@ -8,7 +8,7 @@ export async function GET() {
 
     // Filter if service centre login
     const centreFilter =
-      user.role === 'servicecentre' ? user.centreName : undefined;
+      user.role === 'service_centre' ? user.centreName : undefined;
 
     const stats = await getDashboardStats(centreFilter);
 
