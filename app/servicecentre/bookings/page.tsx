@@ -75,6 +75,7 @@ export default function SCBookings() {
     </button>
   );
 
+  // ── REPAIRED COLS KEYS ───────────────────────────────────
   const cols = [
     {
       key: 'userName',
@@ -84,7 +85,6 @@ export default function SCBookings() {
           <div style={{ color: '#F1F2F6', fontWeight: 700 }}>
             {v}
           </div>
-
           <div
             style={{
               fontSize: 11,
@@ -97,32 +97,30 @@ export default function SCBookings() {
         </div>
       ),
     },
-
     {
-      key: 'service',
+      // 1. DIBAIKI: Ditukar daripada 'service' kepada 'serviceTypeName'
+      key: 'serviceTypeName',
       label: 'Service',
     },
-
     {
-      key: 'date',
+      // 2. DIBAIKI: Ditukar daripada 'date' kepada 'bookingDate'
+      key: 'bookingDate',
       label: 'Date & Time',
       render: (v: string, r: any) => (
         <span style={{ whiteSpace: 'nowrap' }}>
-          {v} {r.time}
+          {v} {r.bookingTime} {/* Ditukar daripada r.time kepada r.bookingTime */}
         </span>
       ),
     },
-
-    {
-      key: 'vehicleMake',
-      label: 'Vehicle',
-      render: (v: string, r: any) => (
-        <span>
-          {v} {r.vehicleModel}
-        </span>
-      ),
-    },
-
+    // {
+    //   key: 'vehicleMake',
+    //   label: 'Vehicle',
+    //   render: (v: string, r: any) => (
+    //     <span>
+    //       {v || '—'} {r.vehicleModel || '—'}
+    //     </span>
+    //   ),
+    // },
     {
       key: 'amount',
       label: 'Amount',
@@ -132,13 +130,11 @@ export default function SCBookings() {
         </b>
       ),
     },
-
     {
       key: 'status',
       label: 'Status',
       render: (v: string) => <StatusPill status={v} />,
     },
-
     {
       key: 'id',
       label: 'Actions',
@@ -159,7 +155,6 @@ export default function SCBookings() {
               >
                 ✓ Confirm
               </Btn>
-
               <Btn
                 onClick={() => update(r.id, 'cancelled')}
                 color="#FF4757"
@@ -206,13 +201,7 @@ export default function SCBookings() {
 
   return (
     <div style={{ width: '100%' }}>
-      <h1
-        style={{
-          fontSize: 22,
-          fontWeight: 700,
-          marginBottom: 24,
-        }}
-      >
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
         All Bookings
       </h1>
 
@@ -243,7 +232,6 @@ export default function SCBookings() {
             style={inp}
           >
             <option value="">All Status</option>
-
             {['pending', 'confirmed', 'completed', 'cancelled'].map(
               (s) => (
                 <option key={s}>{s}</option>
@@ -290,27 +278,13 @@ export default function SCBookings() {
           }}
         >
           <span>Bookings</span>
-
-          <span
-            style={{
-              color: '#44445A',
-              fontWeight: 400,
-              fontSize: 12,
-            }}
-          >
-            {loading
-              ? 'Loading...'
-              : bookings.length + ' records'}
+          <span style={{ color: '#44445A', fontWeight: 400, fontSize: 12 }}>
+            {loading ? 'Loading...' : bookings.length + ' records'}
           </span>
         </div>
 
         {/* RESPONSIVE TABLE */}
-        <div
-          style={{
-            overflowX: 'auto',
-            width: '100%',
-          }}
-        >
+        <div style={{ overflowX: 'auto', width: '100%' }}>
           <DataTable columns={cols} data={bookings} />
         </div>
       </div>
