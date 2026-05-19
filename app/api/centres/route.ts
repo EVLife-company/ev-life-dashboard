@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { getSessionUser, apiResponse, apiError } from '@/lib/auth';
 
-// ✅ GET Centres
 export async function GET() {
   try {
     const user = await getSessionUser();
@@ -28,7 +27,6 @@ export async function GET() {
 }
 
 
-// ✅ POST Create Centre + Auth + User
 export async function POST(req: NextRequest) {
   try {
     const currentUser = await getSessionUser();
@@ -43,16 +41,13 @@ export async function POST(req: NextRequest) {
       return apiError('Missing required fields');
     }
 
-    // 1️⃣ Check if email already exists
     let userRecord;
     try {
       userRecord = await adminAuth.getUserByEmail(adminEmail);
       return apiError('Email already in use');
     } catch {
-      // safe to create
     }
 
-    // 2️⃣ Create Auth user
     userRecord = await adminAuth.createUser({
       email: adminEmail,
       password,
@@ -61,12 +56,10 @@ export async function POST(req: NextRequest) {
 
     const uid = userRecord.uid;
 
-    // 3️⃣ Set role in Auth
     await adminAuth.setCustomUserClaims(uid, {
       role: 'service_centre',
     });
 
-    // 4️⃣ Create Centre (auto ID)
     const centreRef = adminDb.collection('service_centres').doc();
     const centreId = centreRef.id;
 
@@ -83,7 +76,6 @@ export async function POST(req: NextRequest) {
 
     await centreRef.set(centreData);
 
-    // 5️⃣ Create Users collection (🔥 THIS WAS MISSING)
     await adminDb.collection('users').doc(uid).set({
       email: adminEmail,
       name,

@@ -86,33 +86,57 @@ export default function SCProfile() {
     background: '#1C1C2E',
     border: '1px solid rgba(255,255,255,0.12)',
     borderRadius: 10,
-    padding: '10px 14px',
-    fontSize: 13,
+    padding: '12px 14px', // Besarkan sedikit padding untuk mesra mobile touch
+    fontSize: 14, // Saiz font standard untuk elakkan iOS auto-zoom pada input
     color: '#F1F2F6',
     fontFamily: 'Outfit',
     outline: 'none',
-    marginBottom: 12,
+    marginBottom: 14,
+    boxSizing: 'border-box', // Memastikan input tidak terkeluar dari sempadan container
   };
 
   return (
-    <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
+    <div style={{ width: '100%', boxSizing: 'border-box', padding: '0 4px' }}>
+      {/* Dynamic CSS Media Query untuk kawalan responsif */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .profile-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          width: 100%;
+        }
+        @media (max-width: 960px) {
+          .profile-grid {
+            grid-template-columns: 1fr !important; /* Tukar jadi 1 kolum penuh di mobile */
+            gap: 16px !important;
+          }
+          .save-btn {
+            width: 100% !important; /* Butang memanjang penuh di mobile */
+            text-align: center;
+            padding: 14px 24px !important;
+          }
+        }
+      `}} />
+
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: '#F1F2F6' }}>
         Centre Profile
       </h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="profile-grid">
         
         {/* LEFT FORM */}
         <div style={{
           background: '#141420',
           border: '1px solid rgba(255,255,255,0.07)',
           borderRadius: 16,
+          height: 'fit-content'
         }}>
           <div style={{
             padding: '15px 20px',
             borderBottom: '1px solid rgba(255,255,255,0.07)',
             fontWeight: 700,
             fontSize: 13,
+            color: '#F1F2F6'
           }}>
             Centre Details
           </div>
@@ -127,10 +151,10 @@ export default function SCProfile() {
               <div key={key as string}>
                 <label style={{
                   fontSize: 11,
-                  color: '#44445A',
+                  color: '#8E8FA8', // Cerahkan sedikit warna berbanding #44445A untuk aksesibiliti gelap
                   fontWeight: 700,
                   display: 'block',
-                  marginBottom: 5,
+                  marginBottom: 6,
                 }}>
                   {label}
                 </label>
@@ -150,6 +174,7 @@ export default function SCProfile() {
 
             <button
               type="submit"
+              className="save-btn"
               style={{
                 background: '#00D68F',
                 border: 'none',
@@ -158,6 +183,8 @@ export default function SCProfile() {
                 fontWeight: 700,
                 color: '#000',
                 cursor: 'pointer',
+                fontSize: 14,
+                transition: 'background 0.2s ease'
               }}
             >
               Save Changes
@@ -166,14 +193,16 @@ export default function SCProfile() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
+          {/* STATISTICS */}
           <div style={{
             background: '#141420',
+            border: '1px solid rgba(255,255,255,0.07)',
             borderRadius: 16,
             padding: 20,
           }}>
-            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 16, color: '#F1F2F6' }}>
               Statistics
             </div>
 
@@ -187,20 +216,23 @@ export default function SCProfile() {
                 <div key={label} style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  padding: '10px 0',
+                  padding: '12px 0', // Tingkatkan padding baris untuk mesra mobile
+                  borderBottom: label !== 'Rating' ? '1px solid rgba(255,255,255,0.03)' : 'none'
                 }}>
-                  <span style={{ color: '#8E8FA8' }}>{label}</span>
-                  <span style={{ fontWeight: 700 }}>{val}</span>
+                  <span style={{ color: '#8E8FA8', fontSize: 13 }}>{label}</span>
+                  <span style={{ fontWeight: 700, color: '#F1F2F6', fontSize: 13 }}>{val}</span>
                 </div>
               ))}
           </div>
 
+          {/* SERVICES OFFERED */}
           <div style={{
             background: '#141420',
+            border: '1px solid rgba(255,255,255,0.07)',
             borderRadius: 16,
             padding: 20,
           }}>
-            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12, color: '#F1F2F6' }}>
               Services Offered
             </div>
 
@@ -211,10 +243,11 @@ export default function SCProfile() {
               'Software Update — FREE',
             ].map(s => (
               <div key={s} style={{
-                padding: '8px 0',
+                padding: '10px 0',
                 fontSize: 13,
                 color: '#8E8FA8',
-              }}>
+                borderBottom: '1px solid rgba(255,255,255,0.03)',
+              }} className="last-border-none">
                 {s}
               </div>
             ))}

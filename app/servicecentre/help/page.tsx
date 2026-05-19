@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Toast from '@/components/ui/Toast';
+import Swal from 'sweetalert2';
 
 export default function HelpCentre() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -49,37 +50,75 @@ export default function HelpCentre() {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  // 🧪 DUMMY SEND (NO EMAIL CLIENT, NO API)
   const sendEmail = async () => {
+    // Validate fields
     if (!form.email || !form.centreName || !form.message) {
-      setToast('Please fill all fields');
+      Swal.fire({
+        title: 'Missing Information',
+        text: 'Please fill in all fields before sending your message.',
+        icon: 'warning',
+        confirmButtonColor: '#00D68F',
+        confirmButtonText: 'Got it',
+      });
       return;
     }
 
     setLoading(true);
 
-    // simulate network delay
-    await new Promise((res) => setTimeout(res, 1200));
+    try {
+      // Simulate network delay
+      await new Promise((res) => setTimeout(res, 1200));
 
-    console.log('DUMMY SUPPORT MESSAGE:', form);
+      console.log('DUMMY SUPPORT MESSAGE:', form);
 
-    setLoading(false);
-    setToast('Message sent successfully');
+      // SweetAlert Success Popup
+      await Swal.fire({
+        title: 'Message Sent!',
+        text: 'Thank you for reaching out. Our support team will get back to you shortly.',
+        icon: 'success',
+        confirmButtonColor: '#00D68F',
+        confirmButtonText: 'Great',
+      });
 
-    setForm({
-      email: '',
-      centreName: '',
-      message: '',
-    });
+      // Reset Form fields on success
+      setForm({
+        email: '',
+        centreName: '',
+        message: '',
+      });
+
+    } catch (error) {
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to send your message. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#EF4444',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-
   return (
-    <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
+    <div style={{ padding: '0 4px' }}>
+      {/* Dynamic CSS for the grid column breakdown */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .help-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+        @media (max-width: 960px) {
+          .help-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}} />
+
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: '#fff' }}>
         Help Centre
       </h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="help-grid">
 
         {/* LEFT FAQ */}
         <div style={{
@@ -87,8 +126,9 @@ export default function HelpCentre() {
           borderRadius: 16,
           border: '1px solid rgba(255,255,255,0.07)',
           padding: 20,
+          height: 'fit-content'
         }}>
-          <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: '#fff' }}>
             Frequently Asked Questions
           </div>
 
@@ -104,13 +144,16 @@ export default function HelpCentre() {
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 12,
                     fontWeight: 600,
                     fontSize: 13,
                     color: '#F1F2F6',
+                    userSelect: 'none'
                   }}
                 >
-                  {item.q}
-                  <span style={{ color: '#00D68F' }}>
+                  <span>{item.q}</span>
+                  <span style={{ color: '#00D68F', fontSize: 10, flexShrink: 0 }}>
                     {openIndex === i ? '▲' : '▼'}
                   </span>
                 </div>
@@ -131,7 +174,7 @@ export default function HelpCentre() {
         </div>
 
         {/* RIGHT SIDE */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* CONTACT FORM */}
           <div style={{
@@ -140,12 +183,13 @@ export default function HelpCentre() {
             border: '1px solid rgba(255,255,255,0.07)',
             padding: 20,
           }}>
-            <div style={{ fontWeight: 700, fontSize: 30, marginBottom: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: '#fff' }}>
               Contact Support
             </div>
 
             <input
               placeholder="Email"
+              type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               style={inputStyle}
@@ -163,21 +207,23 @@ export default function HelpCentre() {
               rows={4}
               value={form.message}
               onChange={(e) => setForm({ ...form, message: e.target.value })}
-              style={inputStyle}
+              style={{ ...inputStyle, resize: 'vertical' }}
             />
 
             <button
               onClick={sendEmail}
               disabled={loading}
               style={{
-                background: loading ? '#555' : '#00D68F',
+                background: loading ? '#333' : '#00D68F',
                 border: 'none',
                 borderRadius: 10,
-                padding: '10px 14px',
+                padding: '12px 14px',
                 fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer',
-                color: '#000',
+                color: loading ? '#8E8FA8' : '#000',
                 width: '100%',
+                fontSize: 14,
+                transition: 'background 0.2s ease'
               }}
             >
               {loading ? 'Sending...' : 'Send Message'}
@@ -191,11 +237,11 @@ export default function HelpCentre() {
             border: '1px solid rgba(255,255,255,0.07)',
             padding: 20,
           }}>
-            <div style={{ fontWeight: 700, fontSize: 27, marginBottom: 10 }}>
+            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 10, color: '#fff' }}>
               Call Us
             </div>
 
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#00D68F' }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#00D68F', letterSpacing: '0.5px' }}>
               03-6767-1234
             </div>
 
@@ -213,13 +259,14 @@ export default function HelpCentre() {
   );
 }
 
-// reusable style
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  marginBottom: 10,
-  padding: 10,
+  marginBottom: 12,
+  padding: '12px',
   borderRadius: 8,
   border: '1px solid rgba(255,255,255,0.12)',
   background: '#1C1C2E',
   color: '#fff',
+  fontSize: 14,
+  boxSizing: 'border-box', // Essential to keep padding within full-width constraints
 };

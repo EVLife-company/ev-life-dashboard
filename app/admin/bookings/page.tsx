@@ -7,7 +7,7 @@ import Modal from '@/components/ui/Modal';
 import Toast from '@/components/ui/Toast';
 
 const SERVICES = ['Battery Health Check', 'Full Inspection', 'Tyre Service', 'Software Update'];
-const SLOTS = ['09:00 AM', '11:00 AM', '01:00 PM', '03:00 PM', '05:00 PM'];
+const SLOTS = ['09:00 AM', '10:30 AM', '12:00 PM', '01:30 PM', '03:00 PM', '04:30 PM'];
 
 const PRICES: Record<string, number> = {
   'Battery Health Check': 50,
@@ -196,8 +196,8 @@ export default function AdminBookings() {
       render: (_: any, r: any) => (
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
           {r.status === 'pending' && <>
-            <Btn onClick={() => updateStatus(r.id, 'confirmed')} color="#00b894">✓ Approve</Btn>
-            <Btn onClick={() => updateStatus(r.id, 'cancelled')} color="#FF4757">✗ Reject</Btn>
+            <Btn onClick={() => updateStatus(r.id, 'confirmed')} color="#00b894">Approve</Btn>
+            <Btn onClick={() => updateStatus(r.id, 'cancelled')} color="#FF4757">Reject</Btn>
           </>}
           {r.status === 'confirmed' && <Btn onClick={() => updateStatus(r.id, 'completed')} color="#54A0FF">Done</Btn>}
           <Btn onClick={() => deleteB(r.id)} color="#FF4757">🗑</Btn>
