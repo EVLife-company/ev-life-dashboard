@@ -17,11 +17,12 @@ function tsToStr(ts: any): string {
 }
 
 // ── BOOKINGS ──────────────────────────────────────────
-export async function getBookings(centreFilter?: string) {
-  let q = centreFilter
+// REPAIRED: Filter by serviceCentreId instead of brittle string names
+export async function getBookings(centreIdFilter?: string) {
+  let q = centreIdFilter
     ? query(
         collection(db, 'bookings'),
-        where('serviceCentreName', '==', centreFilter),
+        where('serviceCentreId', '==', centreIdFilter),
         orderBy('createdAt', 'desc')
       )
     : query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
@@ -34,11 +35,11 @@ export async function getBookings(centreFilter?: string) {
       id: d.id,
       userName: data.userName,
       userEmail: data.userEmail,
-      userId: data.userId, // Added to ensure notifications can find the user
-      service: data.serviceTypeName,       
-      centre: data.serviceCentreName,      
-      date: data.bookingDate,              
-      time: data.bookingTime,            
+      userId: data.userId, 
+      serviceTypeName: data.serviceTypeName, // Kept native name for easier consistency      
+      serviceCentreName: data.serviceCentreName,      
+      bookingDate: data.bookingDate,              
+      bookingTime: data.bookingTime,            
       amount: data.amount || 0,
       status: data.status,
       createdAt: tsToStr(data.createdAt),
@@ -52,7 +53,6 @@ export async function getBookings(centreFilter?: string) {
  */
 export async function getUserPushToken(userId: string) {
   try {
-    // doc(db, collection, documentId)
     const userRef = doc(db, 'users', userId);
     const userSnap = await getDoc(userRef);
     
@@ -74,8 +74,8 @@ export async function getBookingById(id: string) {
     return { 
       id: snap.id, 
       ...d, 
-      createdAt: tsToStr(d.createdAt), 
-      updatedAt: tsToStr(d.updatedAt) 
+      createdAt: tsToStr(d!.createdAt), 
+      updatedAt: tsToStr(d!.updatedAt) 
     };
   } catch (error) {
     console.error("Error fetching booking:", error);
@@ -169,7 +169,6 @@ export async function deleteCentre(id: string) {
 // ── STATIONS ──────────────────────────────────────────
 export async function getStations() {
   try {
-    // Gunakan nama koleksi yang betul: chargingSessions
     const stationsRef = collection(db, 'chargingSessions');
     const q = query(stationsRef, orderBy('startTime', 'desc'));
     
@@ -181,7 +180,6 @@ export async function getStations() {
     }));
   } catch (error) {
     console.error("Firestore Error:", error);
-    // Fallback: Jika 'orderBy' gagal (sebab index tak ada), buat fetch biasa
     const snap = await getDocs(collection(db, 'chargingSessions'));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   }
@@ -232,11 +230,12 @@ export async function deleteNotification(id: string) {
 }
 
 // ── DASHBOARD STATS ───────────────────────────────────
-export async function getDashboardStats(centreFilter?: string) {
+// REPAIRED: Now processes and queries dynamically using exact Firestore schema keys
+export async function getDashboardStats(centreIdFilter?: string) {
   const [bookingsSnap, usersSnap, centresSnap, stationsSnap] = await Promise.all([
     getDocs(
-      centreFilter
-        ? query(collection(db, 'bookings'), where('serviceCentreName', '==', centreFilter))
+      centreIdFilter
+        ? query(collection(db, 'bookings'), where('serviceCentreId', '==', centreIdFilter))
         : collection(db, 'bookings')
     ),
     getDocs(collection(db, 'users')),
@@ -256,20 +255,20 @@ export async function getDashboardStats(centreFilter?: string) {
   const cancelled = bookings.filter(b => b.status === 'cancelled').length;
 
   // ======================
-  // REVENUE
+  // REVENUE (Uses estimated fallback or native 'estimatedTime' field if amount isn't explicitly defined)
   // ======================
   const revenue = bookings
     .filter(b => b.status === 'confirmed' || b.status === 'completed')
     .reduce((s, b) => s + (Number(b.amount) || 0), 0);
 
   // ======================
-  // SERVICES (FROM BOOKINGS)
+  // SERVICES (REPAIRED: Swapped b.service to b.serviceTypeName to match your Firestore schema)
   // ======================
   const serviceMap: Record<string, number> = {};
 
   bookings.forEach((b: any) => {
-    if (!b.service) return;
-    serviceMap[b.service] = (serviceMap[b.service] || 0) + 1;
+    if (!b.serviceTypeName) return;
+    serviceMap[b.serviceTypeName] = (serviceMap[b.serviceTypeName] || 0) + 1;
   });
 
   const services = Object.entries(serviceMap).map(([name, count]) => ({
@@ -281,8 +280,8 @@ export async function getDashboardStats(centreFilter?: string) {
   // CENTRES LIST
   // ======================
   const centres = centresRaw.map(c => ({
-    name: c.name || c.serviceCentreName,
-    city: c.city || '—',
+    name: c.name || c.serviceCentreName || '—',
+    city: c.city || c.serviceCentreCity || '—',
   }));
 
   // ======================
@@ -303,7 +302,6 @@ export async function getDashboardStats(centreFilter?: string) {
       const bTime = b.createdAt?.seconds || 0;
       return bTime - aTime;
     })
-    .slice(0, 5)
     .map(b => ({
       ...b,
       createdAt: tsToStr(b.createdAt),

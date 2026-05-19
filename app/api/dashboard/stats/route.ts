@@ -3,18 +3,20 @@ import { getDashboardStats } from '@/lib/firestore';
 
 export async function GET() {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUser() as any;
     if (!user) return apiError('Unauthorized', 401);
 
-    // Filter if service centre login
-    const centreFilter =
-      user.role === 'service_centre' ? user.centreName : undefined;
+    const centreIdFilter = user.role === 'service_centre' ? user.serviceCentreId : undefined;
 
-    const stats = await getDashboardStats(centreFilter);
+    const stats = await getDashboardStats(centreIdFilter);
 
-    // 👇 IMPORTANT: make sure stats includes new fields
-    return apiResponse({
-      ...stats,
+    return apiResponse({  
+      pendingBookings: stats.pendingBookings || 0,
+      confirmedBookings: stats.confirmedBookings || 0,
+      completedBookings: stats.completedBookings || 0,
+      cancelledBookings: stats.cancelledBookings || 0,
+      totalRevenue: stats.totalRevenue || 0,
+      recentBookings: stats.recentBookings || [], 
       services: stats.services || [],
       centres: stats.centres || [],
       infraActions: stats.infraActions || [],

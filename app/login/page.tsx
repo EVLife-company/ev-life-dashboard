@@ -4,195 +4,252 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
 
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+  setError('');
+  setLoading(true);
 
-      const data = await res.json();
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
 
-      if (!res.ok) {
-        setError(data.error || 'Login failed');
-        return;
-      }
+    const data = await res.json();
 
-      // wait a bit for cookie to be set properly
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // safer redirect logic
-      const role = data.role;
-
-      if (role === 'admin') {
-        router.replace('/admin');
-      } 
-      else if (role === 'service_centre') {
-        router.replace('/servicecentre');
-      } 
-      else {
-        setError('Unauthorized role. Please contact support.');
-        return;
-      }
-
-      // no router.refresh needed here
-    } 
-    catch (err) {
-      setError('Network error. Please check your connection.');
-    } 
-    finally {
-      setLoading(false);
+    if (!res.ok) {
+      setError(data.error || 'Login failed');
+      return;
     }
-  };
+
+    if (data.role === 'admin') {
+      router.push('/admin');
+    } else if (data.role === 'service_centre') {
+      router.push('/servicecentre');
+    } else {
+      setError('Unauthorized role');
+    }
+  } catch (err) {
+    console.error(err);
+    setError('Network error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const S = {
     page: {
       minHeight: '100vh',
-      background: '#0A0A0F', 
+      background: '#0A0A0F',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 20,
-      fontFamily: 'Outfit, sans-serif'
+      padding: '20px',
+      fontFamily: 'Outfit, sans-serif',
     },
+
     card: {
-      background: '#141420', 
+      background: '#141420',
       border: '1px solid rgba(255,255,255,0.12)',
-      borderRadius: 24,
+      borderRadius: '24px',
       width: '100%',
-      maxWidth: 950,
-      height: 600,
+      maxWidth: '950px',
       display: 'flex',
+      flexWrap: 'wrap' as const,
       overflow: 'hidden',
-      boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+      boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
     },
+
     left: {
-      flex: 1.1,
-      backgroundImage: 'linear-gradient(to bottom, rgba(20,20,32,0.4), rgba(20,20,32,0.8)), url(https://media.wired.com/photos/68a8b69eebb68c4f3de1c5ae/3:2/w_2560%2Cc_limit/GettyImages-2230080278.jpg)',
+      flex: '1 1 400px',
+      minHeight: '300px',
+      backgroundImage:
+        'linear-gradient(to bottom, rgba(20,20,32,0.4), rgba(20,20,32,0.8)), url(https://media.wired.com/photos/68a8b69eebb68c4f3de1c5ae/3:2/w_2560%2Cc_limit/GettyImages-2230080278.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
-      padding: 40,
+      padding: '40px',
       display: 'flex',
       flexDirection: 'column' as const,
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
     },
+
     right: {
-      flex: 1,
-      padding: '60px 45px',
+      flex: '1 1 400px',
+      padding: '40px',
       display: 'flex',
       flexDirection: 'column' as const,
-      justifyContent: 'center'
+      justifyContent: 'center',
     },
+
     input: {
       width: '100%',
       background: '#1C1C2E',
       border: '1px solid rgba(255,255,255,0.12)',
-      borderRadius: 12,
+      borderRadius: '12px',
       padding: '14px 16px',
-      fontSize: 14,
+      fontSize: '14px',
       color: '#F1F2F6',
       outline: 'none',
-      marginBottom: 20,
-      fontFamily: 'Outfit'
+      marginBottom: '20px',
+      fontFamily: 'Outfit',
+      boxSizing: 'border-box' as const,
     },
+
     label: {
-      fontSize: 11,
+      fontSize: '11px',
       fontWeight: 700,
       color: '#44445A',
       letterSpacing: '1px',
       display: 'block',
-      marginBottom: 8
-    }
+      marginBottom: '8px',
+    },
+
+    button: {
+      width: '100%',
+      background: '#00D68F',
+      border: 'none',
+      borderRadius: '12px',
+      padding: '16px',
+      fontSize: '15px',
+      fontWeight: 700,
+      color: '#000',
+      cursor: 'pointer',
+    },
   };
 
   return (
     <div style={S.page}>
       <div style={S.card}>
         
-        {/* LEFT SECTION - IMAGE */}
+        {/* LEFT */}
         <div style={S.left}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, background: '#00D68F', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>⚡</div>
-            <span style={{ fontSize: 24, fontWeight: 800, color: '#F1F2F6' }}>EVLife</span>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                background: '#00D68F',
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              ⚡
+            </div>
+
+            <span
+              style={{
+                fontSize: 24,
+                fontWeight: 800,
+                color: '#F1F2F6',
+              }}
+            >
+              EVLife
+            </span>
           </div>
-          
-          <div style={{ marginBottom: 20 }}>
-            <h2 style={{ fontSize: 32, fontWeight: 800, color: '#F1F2F6', lineHeight: 1.2, marginBottom: 16 }}>
+
+          <div>
+            <h2
+              style={{
+                fontSize: 'clamp(28px, 5vw, 40px)',
+                fontWeight: 800,
+                color: '#F1F2F6',
+                lineHeight: 1.2,
+                marginBottom: 16,
+              }}
+            >
               The future of <br /> EV Management.
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, maxWidth: 300, lineHeight: 1.6 }}>
-              Revolutionizing the way you maintain and monitor electric vehicles.
+
+            <p
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 14,
+                lineHeight: 1.6,
+                maxWidth: 320,
+              }}
+            >
+              Revolutionizing the way you maintain and monitor electric
+              vehicles.
             </p>
           </div>
         </div>
 
-        {/* RIGHT SECTION - LOGIN FORM */}
+        {/* RIGHT */}
         <div style={S.right}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: '#F1F2F6', marginBottom: 8 }}>Welcome</h1>
-          <p style={{ fontSize: 14, color: '#44445A', marginBottom: 35 }}>Login to your dashboard</p>
+          <h1
+            style={{
+              fontSize: 32,
+              fontWeight: 800,
+              color: '#F1F2F6',
+              marginBottom: 8,
+            }}
+          >
+            Welcome
+          </h1>
+
+          <p
+            style={{
+              fontSize: 14,
+              color: '#777',
+              marginBottom: 35,
+            }}
+          >
+            Login to your dashboard
+          </p>
 
           <form onSubmit={handleLogin}>
             <label style={S.label}>EMAIL ADDRESS</label>
-            <input 
-              type="email" 
-              placeholder="admin@evlife.my" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              style={S.input} 
-              required 
+
+            <input
+              type="email"
+              placeholder="admin@evlife.my"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={S.input}
             />
 
             <label style={S.label}>PASSWORD</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              style={S.input} 
-              required 
+
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={S.input}
             />
 
-            {error && <p style={{ color: '#FF4757', fontSize: 12, marginBottom: 15, marginTop: -10 }}>{error}</p>}
+            {error && (
+              <p
+                style={{
+                  color: '#FF4757',
+                  fontSize: 12,
+                  marginBottom: 15,
+                }}
+              >
+                {error}
+              </p>
+            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                background: '#00D68F',
-                border: 'none',
-                borderRadius: 12,
-                padding: 16,
-                fontSize: 15,
-                fontWeight: 700,
-                color: '#000',
-                cursor: 'pointer',
-                transition: '0.2s',
-                opacity: loading ? 0.7 : 1
-              }}
-            >
+            <button type="submit" style={S.button}>
               {loading ? 'Authenticating...' : 'SIGN IN'}
             </button>
           </form>
-
-          {/* DEMO BOX */}
-          <div style={{ marginTop: 35, padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 12, fontSize: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ color: '#00D68F', fontWeight: 700, marginBottom: 5 }}>Demo Access</div>
-            {/* <div style={{ color: '#8E8FA8' }}>Admin: admin@evlife.my / Admin@123</div> */}
-            <div style={{ color: '#8E8FA8' }}>Centre: klcc@sc.evlife.my / klcc123</div>
-          </div>
         </div>
-
       </div>
     </div>
   );

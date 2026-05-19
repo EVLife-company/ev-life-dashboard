@@ -4,27 +4,42 @@ import StatCard from '@/components/ui/StatCard';
 import DataTable from '@/components/ui/DataTable';
 import StatusPill from '@/components/ui/StatusPill';
 
-const SLOTS = ['09:00 AM','10:00 AM','11:00 AM','12:00 PM','01:00 PM','02:00 PM','03:00 PM','04:00 PM','05:00 PM'];
+const SLOTS = ['09:00 AM', '10:30 AM', '12:00 PM', '01:30 PM', '03:00 PM', '04:30 PM'];
 
 export default function ServiceCentreDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/api/dashboard/stats').then(r => r.json()).then(d => { setStats(d); setLoading(false); });
-  }, []);
-
-  const today = new Date().toISOString().split('T')[0];
-
-  const approve = async (id: string) => {
-    await fetch('/api/bookings/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'confirmed' }) });
-    fetch('/api/dashboard/stats').then(r => r.json()).then(setStats);
+  const fetchDashboardData = () => {
+    fetch('/api/dashboard/stats')
+      .then(r => r.json())
+      .then(d => { 
+        setStats(d); 
+        setLoading(false); 
+      });
   };
 
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  // Standardized local YYYY-MM-DD string to compare with Firebase's bookingDate format
+  const today = new Date().toLocaleDateString('sv-SE'); 
+
+  const approve = async (id: string) => {
+    await fetch('/api/bookings/' + id, { 
+      method: 'PATCH', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ status: 'confirmed' }) 
+    });
+    fetchDashboardData();
+  };
+
+  // Updated to match Firestore schema keys
   const cols = [
     { key: 'userName', label: 'Customer', render: (v: string) => <span style={{ color: '#F1F2F6', fontWeight: 700 }}>{v}</span> },
-    { key: 'service', label: 'Service' },
-    { key: 'date', label: 'Date', render: (v: string, r: any) => v + ' ' + r.time },
+    { key: 'serviceTypeName', label: 'Service' },
+    { key: 'bookingDate', label: 'Date', render: (v: string, r: any) => v + ' ' + r.bookingTime },
     { key: 'amount', label: 'Amount', render: (v: number) => <b style={{ color: '#F1F2F6' }}>{v ? 'RM ' + v : 'FREE'}</b> },
     { key: 'status', label: 'Status', render: (v: string) => <StatusPill status={v} /> },
     { key: 'id', label: 'Action', render: (_: any, r: any) => r.status === 'pending'
@@ -32,9 +47,12 @@ export default function ServiceCentreDashboard() {
       : <span style={{ color: '#44445A', fontSize: 11 }}>—</span> },
   ];
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#44445A' }}>Loading...</div>;
+  if (loading || !stats) return <div style={{ textAlign: 'center', padding: 60, color: '#44445A' }}>Loading...</div>;
 
-  const todayBookings = (stats?.recentBookings || []).filter((b: any) => b.date === today);
+  // Filter uses your precise Firebase property 'bookingDate'
+  const todayBookings = (stats?.recentBookings || []).filter((b: any) => 
+    b.bookingDate === today && b.status !== 'cancelled'
+  );
 
   return (
     <div>
@@ -45,18 +63,21 @@ export default function ServiceCentreDashboard() {
         <StatCard label="Completed" value={stats.completedBookings} sub="This month" color="#54A0FF" />
         <StatCard label="Revenue (RM)" value={'RM ' + stats.totalRevenue.toLocaleString()} />
       </div>
+      
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 22 }}>
+        {/* Today's Schedule Linked to Firebase Properties */}
         <div style={{ background: '#141420', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Today&apos;s Schedule</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Today&apos;s Schedule ({today})</div>
           {SLOTS.map(slot => {
-            const bkg = todayBookings.find((b: any) => b.time === slot);
+            // Uses your precise Firebase property 'bookingTime'
+            const bkg = todayBookings.find((b: any) => b.bookingTime === slot);
             return (
               <div key={slot} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#1C1C2E', borderRadius: 10, marginBottom: 6, borderLeft: bkg ? '3px solid ' + (bkg.status === 'pending' ? '#FFA502' : '#00D68F') : '3px solid transparent', opacity: bkg ? 1 : 0.35 }}>
                 <span style={{ fontSize: 11, color: '#44445A', minWidth: 60, fontWeight: 700 }}>{slot}</span>
                 {bkg ? <>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#F1F2F6' }}>{bkg.userName}</div>
-                    <div style={{ fontSize: 11, color: '#44445A' }}>{bkg.service}</div>
+                    <div style={{ fontSize: 11, color: '#44445A' }}>{bkg.serviceTypeName}</div>
                   </div>
                   <StatusPill status={bkg.status} />
                 </> : <span style={{ fontSize: 12, color: '#44445A' }}>Available</span>}
@@ -64,6 +85,7 @@ export default function ServiceCentreDashboard() {
             );
           })}
         </div>
+
         <div style={{ background: '#141420', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Booking Summary</div>
           {[
@@ -82,6 +104,7 @@ export default function ServiceCentreDashboard() {
           ))}
         </div>
       </div>
+
       <div style={{ background: '#141420', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
         <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', fontWeight: 700, fontSize: 13 }}>Recent Bookings</div>
         <DataTable columns={cols} data={stats.recentBookings || []} emptyMessage="No bookings yet" />

@@ -12,8 +12,6 @@ export default async function ServiceCentreLayout({
   if (!user) redirect('/login');
   if (user.role !== 'service_centre') redirect('/admin');
 
-  const SIDEBAR_WIDTH = 250;
-
   return (
     <div
       style={{
@@ -30,17 +28,9 @@ export default async function ServiceCentreLayout({
         centreName={user.centreName}
       />
 
-      {/* MAIN */}
-      <main
-        style={{
-          marginLeft: SIDEBAR_WIDTH,
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-          background: '#0B0B14',
-        }}
-      >
+      {/* MAIN CONTENT WRAPPER */}
+      <main className="sc-main-layout">
+        
         {/* TOPBAR */}
         <header
           style={{
@@ -77,23 +67,50 @@ export default async function ServiceCentreLayout({
             </span>
           </div>
 
-          <span style={{ fontSize: 12, color: '#44445A' }}>
+          <span style={{ fontSize: 12, color: '#8E8FA8' }}>
             {user.centreName || 'SERVICE CENTRE'}
           </span>
         </header>
 
-        {/* CONTENT */}
-        <div
-          style={{
-            flex: 1,
-            padding: 28,
-            background: '#0B0B14',
-            color: '#fff',
-          }}
-        >
+        {/* CONTENT AREA */}
+        <div className="sc-content-area">
           {children}
         </div>
       </main>
+
+      {/* SUNTIKAN STYLESHEET DINAMIK UNTUK RESPONSIF */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .sc-main-layout {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+          background: '#0B0B14';
+          /* Default Desktop: beri ruang 250px di kiri supaya tidak bertindih dengan sidebar */
+          margin-left: 250px; 
+          transition: margin-left 0.3s ease;
+        }
+
+        .sc-content-area {
+          flex: 1;
+          padding: 28px;
+          background: #0B0B14;
+          color: #fff;
+        }
+
+        /* CONFIGURATION UNTUK MOBILE & TABLET (Maksimum skrin 768px) */
+        @media (max-width: 768px) {
+          .sc-main-layout {
+            /* Hapuskan gap 250px di sebelah kiri sepenuhnya! */
+            margin-left: 0px !important; 
+          }
+          
+          .sc-content-area {
+            /* Kecilkan padding di mobile supaya content (table/card) rapat & penuh skrin */
+            padding: 16px 12px !important; 
+          }
+        }
+      `}} />
     </div>
   );
 }
